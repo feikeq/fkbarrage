@@ -1,0 +1,178 @@
+<!doctype html>
+<html>
+<head>
+<!--
+
+  ___________    .__ __             __      __            .__       .___
+  \_   _____/___ |__|  | __ ____   /  \    /  \___________|  |    __| _/
+   |    __)/ __ \|  |  |/ // __ \  \   \/\/   /  _ \_  __ \  |   / __ | 
+   |     \\  ___/|  |    <\  ___/   \        (  <_> )  | \/  |__/ /_/ | 
+   \___  / \___  >__|__|_ \\___  >   \__/\  / \____/|__|  |____/\____ | 
+       \/      \/        \/    \/         \/                         \/ 
+
+    废客联邦
+    http://www.FK68.net/
+
+-->
+<meta charset="utf-8">
+<title>FK弹幕效果</title>
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no, minimal-ui">
+<script src="jquery.min.js"></script>
+</head>
+<body>
+ 
+	<div id='feikeq' style="background: #ccc; border: 1px solid red;">
+		<img style="height: 300px;" src="Desert.jpg"/>
+	</div>
+ 
+
+
+
+<div style="position: absolute; overflow: hidden;white-space:nowrap; z-index: 9999;left: 0; top: 0; background: #ff0; line-height: 30px; height: 30px; width: 199px;display: none;">
+<span style="background: #f0f; padding: 0;  margin-left:100%;">margin:100%;使对象向右移动一段距离，这段距离等于父体的内容宽度。</span>
+</div> 
+
+
+
+<a href="javascript:gogogo()"><测试></a>
+
+<script>
+/*! FKbarrage v1.1 | FeikeWrold | www.fk68.net */
+// 创建一个闭包 相当于 var jq = function($){}; jq(jQuery); //把Jquery当参传入 兼容jQuery操作符'$'和'jQuery '
+(function ($){
+	 // 插件的定义    
+	$.fn.fkbarrage=function(options ){
+		// 在这里没有必要使用$(this)因为$(this) 跟 $($('#element'))是一样的
+		var $this = this;
+
+		//合并设置结果
+		var settings = $.extend({
+	      height:20, //行高
+	      spacing:4, //间隔 4/1
+	      style:'', //自定义样式外层框样式
+	      noevent:1, //不响应事件(事件穿透) 
+	      speed: 5000 //速度
+	    }, options );
+
+ 
+	    //定义当前正在显示的列表
+	    var showList={};
+
+	    //定义插件方法
+	    var myfunction ={
+	    	pusshtxt:function(txt,style){
+			    var fontSize = settings.height * 0.8;
+
+
+			    //得到容器box宽高
+	    		var box_w = $this.width();
+	    		var box_h = $this.height();
+
+
+	    		//生成字幕的now宽高
+	    		var now_w = box_w;
+	    		var now_h = settings.height;
+
+	    		var now_n = parseInt(now_w / settings.spacing); //间隔为宽度的4分之1
+
+	    		//得到总行数
+	    		var counts = parseInt(box_h / now_h);
+
+	    		///*当前时间戳做为ID*/ 
+	    		var now_id = new Date().getTime();
+	    		//得到字幕长度
+	    		var now_lg = txt.length * fontSize; 
+
+	    		//计算速度
+	    		//var stepnum = ( now_w / now_lg );
+	    		//甄伟佳提供以时间速度的算法  时间线=(0.2/499)x初始时间x字符长度 + (399/499)x初始时间;
+	    		var stepnum = parseInt((0.5/499)*now_lg*settings.speed + (249/499)* settings.speed); //区间调大了，只是是0.8现在是对半
+	    		//console.log('字幕长：'+now_lg + '   动画时间：'+stepnum);
+
+	    		//得到尾吧位置
+	    		var now_wb = box_w - now_lg; //如果比宽长就是负数如果没宽长就是正数哈哈
+
+	    		var box_t =0; //第一行位置
+	    		//得到ID去取marging 的位置，或取相对位置。用数组去存行信息
+	    		//console.log(box_w+' - '+now_lg +' = '+now_wb);
+	    		for (var i = 1; i <= counts; i++) {
+	    			if(!showList[i]){
+	    				showList[i] = now_id;
+	    				box_t = i * now_h - now_h;
+	    				break;
+	    			}
+	    		};
+
+	    		//console.log(showList);
+	    		var cssevent= 'pointer-events:none;';
+	    		if(!settings.noevent) cssevent ='';
+	    		var divhtm ='<div id="now_'+now_id+'" style="position: absolute; overflow: hidden;white-space:nowrap; '+cssevent+' z-index: 9999;left: 0;';
+	    		divhtm += 'width: '+now_w+'px; height: '+now_h+'px;top: '+box_t+'px; line-height: '+settings.height+'px;' +settings.style+'">';
+	    		divhtm += '<span id='+now_id+' style="padding: 0; margin-left:'+now_w+'px;' +style+'">'+txt+'</span></div>';
+	    		$this.append(divhtm);
+	    		$('#now_'+now_id +' span').animate(
+	    			{marginLeft: - now_lg},
+	    			{
+	    				duration:stepnum,
+	    				step: function(now, fx) {
+	    					//var data = fx.elem.id + ' ' + fx.prop + ': ' + now;
+	    					if(now < (now_wb  -now_n) ){
+	    						//$(this).stop();//让当前动画直接到达末状态 ，继续下一个动画
+	    						//console.log(showList[i] +'=='+this.id);
+	    						//保证只移除自己那行
+	    						if(showList[i] == this.id){
+	    							delete showList[i];
+	    						}
+	    						
+	    					}
+	    				},
+	    				done:function(animation,jumpedToEnd){
+	    					$(this).parent().remove();
+	    				}
+	    			}
+	    		);
+	    	},
+	    	stoptxt:function(e){
+	    		console.log('废客联邦');
+	    	},
+	    	hidetxt:function(e){
+	    		console.log('http://www.fk68.net');
+	    	}
+	    };
+	    return myfunction;
+	};
+})(jQuery);
+// 闭包结束
+
+
+
+var barrage =$('#feikeq').fkbarrage({
+	height:30, //行高
+	spacing:4, //间隔 (主元素宽度的4/1) 
+	style:'border:1px solid red;', //自定义样式
+	speed:5000 //速度
+});
+
+
+
+function gogogo(){
+	var tmpstr=[
+		'字少',
+		'得到字幕长度',
+		'得到字幕长度和值的对象',
+		'一个对像的属性和值的对象，',
+		'一个对像的属性和值的对象，动画将根据这组对象移动。',
+		'一个对像的属性和值的对象，动画将根据这组对象移动。方法主要有三种 转换函数、',
+		'一个对像的属性和值的对象，动画将根据这组对象移动。方法主要有三种 转换函数、强制类型转换、利用js变量弱类型转',
+		'一个对像的属性和值的对象，动画将根据这组对象移动。方法主要有三种 转换函数、强制类型转换、利用js变量弱类型转得到字幕长度得到字幕长度和值的对象',
+		'一个对像的属性和值的对象，动画将根ds强制类型转换、利用js变量弱ssdsdsd我为要枳要工类型转'
+	];
+	var tmparr=["color: #fff;font-Size: 12;fontWeight: bold;color:#eee","color: #ddd",'color: #ccc','font-Size: 40px','color: #0ff','color: #ff0','font-Weight: bold','color: #cccccc'];
+	var keys = parseInt(8*Math.random());
+	//console.log(tmpstr[keys]); //文字内容
+	//console.log(tmparr[keys]); //自定义样式内层滚动字样式
+	barrage.pusshtxt(tmpstr[keys],tmparr[keys]);
+}
+</script>
+</body>
+</html>
