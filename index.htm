@@ -10,7 +10,7 @@
    \___  / \___  >__|__|_ \\___  >   \__/\  / \____/|__|  |____/\____ | 
        \/      \/        \/    \/         \/                         \/ 
 
-    废客联邦
+    肥客联邦
     http://www.FK68.net/
 
 -->
@@ -37,122 +37,136 @@
 <a href="javascript:gogogo()"><测试></a>
 
 <script>
-/*! FKbarrage v1.1 | FeikeWrold | www.fk68.net */
-// 创建一个闭包 相当于 var jq = function($){}; jq(jQuery); //把Jquery当参传入 兼容jQuery操作符'$'和'jQuery '
-(function ($){
-	 // 插件的定义    
-	$.fn.fkbarrage=function(options ){
-		// 在这里没有必要使用$(this)因为$(this) 跟 $($('#element'))是一样的
-		var $this = this;
 
-		//合并设置结果
-		var settings = $.extend({
-	      height:20, //行高
-	      spacing:4, //间隔 4/1
-	      style:'', //自定义样式外层框样式
-	      noevent:1, //不响应事件(事件穿透) 
-	      speed: 5000 //速度
-	    }, options );
+
 
  
-	    //定义当前正在显示的列表
-	    var showList={};
+/*! FKbarrage v1.2 | FeikeWrold | www.fk68.net */
+// 创建一个闭包 相当于 var jq = function($){}; jq(jQuery); //把Jquery当参传入 兼容jQuery操作符'$'和'jQuery '
+(function ($){
+   // 插件的定义    
+  $.fn.fkbarrage=function(options ){
+    // 在这里没有必要使用$(this)因为$(this) 跟 $($('#element'))是一样的
+    var $this = this;
 
-	    //定义插件方法
-	    var myfunction ={
-	    	pusshtxt:function(txt,style){
-			    var fontSize = settings.height * 0.8;
+    //合并设置结果
+    var settings = $.extend({
+        ratio:4, //比例占屏幕宽度的 4%
+        style:'', //自定义样式
+        speed: 5000 //从左至右的速度
+      }, options );
+
+ 
+      //定义当前正在显示的列表
+      var showList={};
+
+      //定义插件方法
+      var myfunction ={
+        pusshtxt:function(txt,style){
+
+          //得到容器window宽高
+          var box_w = $(window).width();
+          var box_h = $(window).height();
+
+          var ratio = settings.ratio;
+          var fontsize = ratio*0.625; //字体大小为高度的 62%
 
 
-			    //得到容器box宽高
-	    		var box_w = $this.width();
-	    		var box_h = $this.height();
+          //字幕的now高
+          var now_h = parseInt(box_w * (ratio /100));
+          var now_n = now_h*4; // 间隔为高的4倍
+
+          //得到总行数
+          var counts = parseInt(box_h / now_h);
 
 
-	    		//生成字幕的now宽高
-	    		var now_w = box_w;
-	    		var now_h = settings.height;
+          ///*当前时间戳做为ID*/ 
+          var now_id = new Date().getTime();
 
-	    		var now_n = parseInt(now_w / settings.spacing); //间隔为宽度的4分之1
+          var box_t ; //当前这行的位置
+          var ii =1 ; //当前这行的位置
+          //得到ID去取marging 的位置，或取相对位置。用数组去存行信息
+          for (ii; ii <= counts; ii++) {
+            if(!showList[ii]){
+              showList[ii] = now_id;
+              box_t = ii * now_h - now_h;
+              break;
+            }
+          };
 
-	    		//得到总行数
-	    		var counts = parseInt(box_h / now_h);
+          // console.log(showList);
+          var divhtm ='<div id="now_'+now_id+'" style="height:'+ratio+'vw;line-height:'+ratio+'vw;position: absolute;white-space:nowrap;z-index: 9999;left:0;top:'+box_t+'px;'+settings.style+'">';
+          divhtm += '<span id='+now_id+' style="opacity:0;font-size:'+fontsize+'vw;line-height:'+ratio+'vw; padding-right:'+parseInt(fontsize)+'vw; border-radius:'+ratio+'vw;display: inline-block;font-weight: bold; background-color: #000;color: #fff;';
+          divhtm += style+'">'+txt+'</span></div>';
+          var Obj_now = $this.append(divhtm).find('#now_'+now_id +' span');
+          //console.log(Obj_now);
 
-	    		///*当前时间戳做为ID*/ 
-	    		var now_id = new Date().getTime();
-	    		//得到字幕长度
-	    		var now_lg = txt.length * fontSize; 
+          //得到字幕长度
+          var now_lg = Obj_now.width() +now_n;
+           
+          //计算速度
+          //甄伟佳提供以时间速度的算法  时间线=(0.2/499)x初始时间x字符长度 + (399/499)x初始时间;
+          var stepnum = parseInt((0.5/499)*now_lg*settings.speed + (249/499)* settings.speed); //区间调大了，只是是0.8现在是对半
 
-	    		//计算速度
-	    		//var stepnum = ( now_w / now_lg );
-	    		//甄伟佳提供以时间速度的算法  时间线=(0.2/499)x初始时间x字符长度 + (399/499)x初始时间;
-	    		var stepnum = parseInt((0.5/499)*now_lg*settings.speed + (249/499)* settings.speed); //区间调大了，只是是0.8现在是对半
-	    		//console.log('字幕长：'+now_lg + '   动画时间：'+stepnum);
-
-	    		//得到尾吧位置
-	    		var now_wb = box_w - now_lg; //如果比宽长就是负数如果没宽长就是正数哈哈
-
-	    		var box_t =0; //第一行位置
-	    		//得到ID去取marging 的位置，或取相对位置。用数组去存行信息
-	    		//console.log(box_w+' - '+now_lg +' = '+now_wb);
-	    		for (var i = 1; i <= counts; i++) {
-	    			if(!showList[i]){
-	    				showList[i] = now_id;
-	    				box_t = i * now_h - now_h;
-	    				break;
-	    			}
-	    		};
-
-	    		//console.log(showList);
-	    		var cssevent= 'pointer-events:none;';
-	    		if(!settings.noevent) cssevent ='';
-	    		var divhtm ='<div id="now_'+now_id+'" style="position: absolute; overflow: hidden;white-space:nowrap; '+cssevent+' z-index: 9999;left: 0;';
-	    		divhtm += 'width: '+now_w+'px; height: '+now_h+'px;top: '+box_t+'px; line-height: '+settings.height+'px;' +settings.style+'">';
-	    		divhtm += '<span id='+now_id+' style="padding: 0; margin-left:'+now_w+'px;' +style+'">'+txt+'</span></div>';
-	    		$this.append(divhtm);
-	    		$('#now_'+now_id +' span').animate(
-	    			{marginLeft: - now_lg},
-	    			{
-	    				duration:stepnum,
-	    				step: function(now, fx) {
-	    					//var data = fx.elem.id + ' ' + fx.prop + ': ' + now;
-	    					if(now < (now_wb  -now_n) ){
-	    						//$(this).stop();//让当前动画直接到达末状态 ，继续下一个动画
-	    						//console.log(showList[i] +'=='+this.id);
-	    						//保证只移除自己那行
-	    						if(showList[i] == this.id){
-	    							delete showList[i];
-	    						}
-	    						
-	    					}
-	    				},
-	    				done:function(animation,jumpedToEnd){
-	    					$(this).parent().remove();
-	    				}
-	    			}
-	    		);
-	    	},
-	    	stoptxt:function(e){
-	    		console.log('废客联邦');
-	    	},
-	    	hidetxt:function(e){
-	    		console.log('http://www.fk68.net');
-	    	}
-	    };
-	    return myfunction;
-	};
+          
+          //开始动画
+          Obj_now.css({marginLeft:box_w,opacity:1}).animate(
+            {marginLeft: - now_lg},
+            {
+              duration:stepnum,
+              step: function(now, fx) {
+                //动画中途结束 做的操作
+                //得到尾吧位置阀值
+                var now_wb = box_w - now_lg  ; //如果比宽长就是负数如果没宽长就是正数哈哈
+                if(now < now_wb){
+                  //$(this).stop();//让当前动画直接到达末状态 ，继续下一个动画
+                  //console.log(showList[i] +'=='+this.id);
+                  //保证只移除自己那行
+                  if(showList[ii] == this.id){
+                    delete showList[ii]; //删除这个标记 确保在这行上出现2条字幕
+                  }
+                  
+                }
+              },
+              done:function(animation,jumpedToEnd){
+                $(this).parent().remove();//动画完全结束
+              }
+            }
+          );
+          //结束动画
+        
+        },
+        stoptxt:function(e){
+          console.log('肥客联邦');
+        },
+        hidetxt:function(e){
+          console.log('http://www.fk68.net');
+        }
+      };
+      return myfunction;
+  };
 })(jQuery);
 // 闭包结束
 
 
 
 var barrage =$('#feikeq').fkbarrage({
-	height:30, //行高
-	spacing:4, //间隔 (主元素宽度的4/1) 
-	style:'border:1px solid red;', //自定义样式
-	speed:5000 //速度
+	ratio:2, //比例占屏幕宽度的 4%
+	//style:'padding:20px;', //自定义弹幕外层DIV样式
+	speed:7000 //从左至右的速度
 });
 
+
+/*
+//弹幕  gogogo('500x500.png','这是一条测试');gogogo('500x500.png','真的你信不处要夲在要工这是一条测试');
+function gogogo(img,txt){
+  var tmpstr='<img src="'+img+'" style="width:4vw;height:4vw;border-radius: 4vw;vertical-align: top;">'+txt;
+  var tmparr=["color: #fff;font-Size: 12;fontWeight: bold;color:#eee","color: #ddd",'color: #ccc','font-Size: 40px','color: #0ff','color: #ff0','font-Weight: bold','color: #cccccc'];
+  //console.log(tmpstr[keys]); //文字内容
+  //console.log(tmparr[keys]); //自定义样式内层滚动字样式
+  barrage.pusshtxt(tmpstr,'');
+}
+*/
 
 
 function gogogo(){
